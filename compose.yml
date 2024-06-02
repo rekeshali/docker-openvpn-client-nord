@@ -1,0 +1,18 @@
+services:
+  openvpn-nord:
+    build: 
+      context: ./build
+      dockerfile: Dockerfile
+    container_name: openvpn-nord
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    environment:
+      - NORDVPN_SERVER=${NORDVPN_SERVER}
+      - OPENVPN_USERNAME=${OPENVPN_USERNAME}
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
+      - OPENVPN_TECHNOLOGY=UDP
+      - KILL_SWITCH=on
+      - ALLOWED_SUBNETS=192.168.10.0/24
+    restart: unless-stopped

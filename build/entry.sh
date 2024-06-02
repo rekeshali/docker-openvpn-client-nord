@@ -13,33 +13,23 @@ is_enabled() {
     [[ ${1,,} =~ ^(true|t|yes|y|1|on|enable|enabled)$ ]]
 }
 
-# Either a specific file name or a pattern.
-if [[ $CONFIG_FILE ]]; then
-    config_file=$(find /config -name "$CONFIG_FILE" 2> /dev/null | sort | shuf -n 1)
-else
-    config_file=$(find /config -name '*.conf' -o -name '*.ovpn' 2> /dev/null | sort | shuf -n 1)
-fi
+NORDVPN_SERVER=$(echo $NORDVPN_SERVER | tr '[:upper:]' '[:lower:]')
+OPENVPN_TECHNOLOGY=$(echo $OPENVPN_TECHNOLOGY | tr '[:upper:]' '[:lower:]')
+NORDVPN_OPENVPN_CONFIG=$NORDVPN_SERVER.nordvpn.com.$OPENVPN_TECHNOLOGY.ovpn
 
-if [[ -z $config_file ]]; then
-    echo "no openvpn configuration file found" >&2
-    exit 1
-fi
+echo "Using NordVPN configuration: $NORDVPN_OPENVPN_CONFIG"
+echo
 
-echo "using openvpn configuration file: $config_file"
-
+echo -e "$OPENVPN_USERNAME\n$OPENVPN_PASSWORD" > /etc/openvpn/credentials.txt
+chmod 600 /etc/openvpn/credentials.txt
 
 openvpn_args=(
-    "--config" "$config_file"
-    "--cd" "/config"
+    "--config" "/etc/openvpn/ovpn_$OPENVPN_TECHNOLOGY/$NORDVPN_OPENVPN_CONFIG"
+    "--auth-user-pass" "/etc/openvpn/credentials.txt"
 )
 
 if is_enabled "$KILL_SWITCH"; then
     openvpn_args+=("--route-up" "/usr/local/bin/killswitch.sh $ALLOWED_SUBNETS")
-fi
-
-# Docker secret that contains the credentials for accessing the VPN.
-if [[ $AUTH_SECRET ]]; then
-    openvpn_args+=("--auth-user-pass" "/run/secrets/$AUTH_SECRET")
 fi
 
 openvpn "${openvpn_args[@]}" &
