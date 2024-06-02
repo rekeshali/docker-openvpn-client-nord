@@ -1,3 +1,27 @@
+# Modifications
+This is pretty much the same docker configuration except it streamlines the process by downloading OpenVPN configuration files directly from NordVPN and uses environment variables for authentication. Just supply a NordVPN server code and pass your OpenVPN credentials in the environment. Really useful for connecting to your dedicated IP without having to juggle a bunch of files.
+
+#### `docker-compose`
+```yaml
+services:
+  openvpn-nord:
+    build: 
+      context: ./build
+      dockerfile: Dockerfile
+    container_name: openvpn-nord
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    environment:
+      - NORDVPN_SERVER=uk2234
+      - OPENVPN_USERNAME=<your_openvpn_username_from_nordvpn>
+      - OPENVPN_PASSWORD=<your_openvpn_password_from_nordvpn>
+      - OPENVPN_TECHNOLOGY=UDP
+      - KILL_SWITCH=on
+      - ALLOWED_SUBNETS=192.168.10.0/24
+    restart: unless-stopped
+```
 # OpenVPN Client for Docker
 
 Archived in favor of [a WireGuard version](https://github.com/wfg/docker-wireguard).
